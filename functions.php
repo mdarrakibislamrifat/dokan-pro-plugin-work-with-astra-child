@@ -25,19 +25,15 @@ function child_enqueue_styles() {
 add_action( 'wp_enqueue_scripts', 'child_enqueue_styles', 15 );
 
 
-// Add Dokan Vendor Registration Form to WordPress Login Page
-function rifat_add_dokan_registration_form() {
-    // Only show on the default login page
-    if ( $GLOBALS['pagenow'] === 'wp-login.php' ) {
-        echo '<div style="margin-top: 40px; padding: 20px; background: #f9f9f9; border-radius: 8px;">';
-        echo '<h2 style="text-align:center;">Vendor Registration</h2>';
-        echo do_shortcode('[dokan-vendor-registration]');
-        echo '</div>';
+
+// Enque single page product custom css
+function single_product_custom_css() {
+    if (is_product()) {
+        wp_enqueue_style('custom-single-product-css', get_stylesheet_directory_uri() . '/assets/css/single-product.css', array(), '1.0.0', 'all');
     }
 }
-add_action('login_footer', 'rifat_add_dokan_registration_form');
 
-
+add_action( 'wp_enqueue_scripts', 'single_product_custom_css' );
 
 
 // Shortcode for Custom Search Form
@@ -260,7 +256,10 @@ function custom_search_results_shortcode() {
         <?php else: ?>
         <img src="https://via.placeholder.com/200x150" alt="<?php the_title(); ?>">
         <?php endif; ?>
-        <div class="product-name"><?php the_title(); ?></div>
+        <div class="product-name">
+            <a href="<?php echo esc_url(get_permalink()); ?>"><?php the_title(); ?></a>
+        </div>
+
         <?php if (!is_wp_error($brand) && !empty($brand)) : ?>
         <div class="product-brand"><?php echo esc_html($brand[0]); ?></div>
         <?php endif; ?>
@@ -278,7 +277,6 @@ function custom_search_results_shortcode() {
 </div>
 
 <style>
-/* Keep your existing Flexbox design unchanged */
 .custom-product-grid {
     display: flex;
     flex-wrap: wrap;
@@ -289,6 +287,7 @@ function custom_search_results_shortcode() {
 
 .custom-product-item {
     flex: 1 1 calc(33.333% - 20px);
+    /* 3 columns */
     box-sizing: border-box;
     text-align: center;
     padding: 10px;
@@ -297,24 +296,30 @@ function custom_search_results_shortcode() {
 
 .custom-product-item img {
     max-width: 100%;
+    max-height: 150px;
     height: auto;
     border-radius: 4px;
 }
 
-.custom-product-item .product-name {
-    margin-top: 10px;
+.product-name a {
     font-weight: bold;
+    color: #ffffffff;
+    text-decoration: underline;
+    cursor: pointer;
 }
 
+/* Responsive for tablets and phones */
 @media (max-width: 768px) {
     .custom-product-item {
         flex: 1 1 calc(50% - 20px);
+        /* 2 per row */
     }
 }
 
 @media (max-width: 480px) {
     .custom-product-item {
         flex: 1 1 100%;
+        /* 1 per row */
     }
 }
 </style>
