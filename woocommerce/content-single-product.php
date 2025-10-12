@@ -19,91 +19,103 @@ if ( post_password_required() ) {
 
     <div class="custom-product-container">
 
-
         <!-- 🖼️ Left Column: Product Images -->
         <div class="custom-product-left">
-
             <div class="custom-woocommerce-product-gallery">
                 <?php
-            do_action( 'woocommerce_before_single_product_summary' );
-            ?>
+                /**
+                 * Display product gallery (images)
+                 */
+                do_action( 'woocommerce_before_single_product_summary' );
+                ?>
+
                 <div class="sponsored-badge">
                     <p class="sponsored-text">Sponsored</p>
                 </div>
+
                 <div class="custom-product-back-button">
-                    <button class="back-button">Back</button>
+                    <button class="back-button" onclick="history.back()">Back</button>
                     <button class="wishlist-button">Wishlist</button>
-
-
-
-
                 </div>
             </div>
         </div>
 
-        <!--  Right Column: Product Info -->
+        <!-- 🧾 Right Column: Product Info -->
         <div class="rifat-product-right">
             <div class="summary entry-summary">
 
-                <!-- Product Title -->
-                <h1 class="rifat-single-product-title">2024 Honda Accord EX FWD</h1>
+                <!-- ✅ Product Title -->
+                <h1 class="rifat-single-product-title"><?php the_title(); ?></h1>
 
+                <!-- ✅ Product Short Description -->
+                <div class="rifat-single-product-location">
+                    <?php echo wpautop( $product->get_short_description() ); ?>
+                </div>
                 <!-- Location -->
                 <p class="rifat-single-product-location">Alhambra, CA (20 mi away)</p>
 
-                <!-- Price -->
-                <div class="rifat-single-product-price">$25,999</div>
+                <!-- ✅ Product Price -->
+                <div class="rifat-single-product-price">
+                    <?php echo $product->get_price_html(); ?>
+                </div>
 
-                <!-- Deal Info & Dealer Rating Row -->
+                <!-- ✅ Deal Info & Dealer Rating Row -->
                 <div class="rifat-dealership-rating">
-                    <!-- Left: Deal Info -->
                     <div class="rifat-deal-section">
                         <div class="rifat-fair-deal-badge">
                             <span class="rifat-badge-dot">●</span> Fair Deal
                         </div>
-                        <p class="rifat-market-info">$18 above market <span class="rifat-info-icon">ⓘ</span></p>
+                        <p class="rifat-market-info">
+                            <?php echo esc_html__( '$18 above market', 'astra-child' ); ?>
+                            <span class="rifat-info-icon">ⓘ</span>
+                        </p>
                     </div>
 
-                    <!-- Right: Dealer Rating -->
                     <div class="rifat-rating-section">
-                        <p class="rifat-dealer-label">Dealer rating</p>
+                        <p class="rifat-dealer-label"><?php esc_html_e( 'Dealer rating', 'astra-child' ); ?></p>
                         <div class="rifat-stars-reviews">
-                            <span class="rifat-stars">★★★<span class="rifat-half-star">★</span><span
-                                    class="rifat-empty-star">★</span></span>
-                            <a href="#" class="rifat-reviews-link">(7 reviews)</a>
+                            <?php echo wc_get_rating_html( $product->get_average_rating() ); ?>
+                            <a href="#reviews" class="rifat-reviews-link">
+                                (<?php echo $product->get_review_count(); ?> reviews)
+                            </a>
                         </div>
                     </div>
                 </div>
 
-                <!-- Request Information Box -->
+                <!-- ✅ Request Information Box -->
                 <div class="rifat-request-information">
-                    <h2 class="rifat-request-title">Request information</h2>
+                    <h2 class="rifat-request-title"><?php esc_html_e( 'Request information', 'astra-child' ); ?></h2>
 
-                    <button class="rifat-availability-button">Check availability</button>
+                    <button class="rifat-availability-button">
+                        <?php esc_html_e( 'Check availability', 'astra-child' ); ?>
+                    </button>
 
-                    <button class="rifat-finance-button">See finance & trade-in options</button>
+                    <button class="rifat-finance-button">
+                        <?php esc_html_e( 'See finance & trade-in options', 'astra-child' ); ?>
+                    </button>
 
                     <div class="rifat-contact-options">
                         <a href="tel:8001234567" class="rifat-contact-link">
-                            <span class="rifat-phone-icon">📞</span> Call (800) 123-4567
+                            <span class="rifat-phone-icon">📞</span>
+                            <?php esc_html_e( 'Call (800) 123-4567', 'astra-child' ); ?>
                         </a>
                         <a href="#" class="rifat-contact-link">
-                            <span class="rifat-chat-icon">💬</span> Chat
+                            <span class="rifat-chat-icon">💬</span>
+                            <?php esc_html_e( 'Chat', 'astra-child' ); ?>
                         </a>
                     </div>
                 </div>
 
-                <!-- Pre-qualify Text -->
+                <!-- ✅ Pre-qualify Text -->
                 <p class="rifat-prequalify-text">
-                    Pre-qualify for financing with no impact to your credit score.
+                    <?php esc_html_e( 'Pre-qualify for financing with no impact to your credit score.', 'astra-child' ); ?>
                 </p>
 
-                <!-- Partner Logos -->
+                <!-- ✅ Partner Logos (static placeholders — can make dynamic later) -->
                 <div class="rifat-partner-logos">
                     <div class="rifat-logo-placeholder">Capital One</div>
                     <div class="rifat-logo-placeholder">CHASE</div>
                 </div>
-
 
             </div>
         </div>
@@ -113,11 +125,7 @@ if ( post_password_required() ) {
     <div class="custom-product-tabs">
         <?php
         /**
-         * Hook: woocommerce_after_single_product_summary
-         *
-         * @hooked woocommerce_output_product_data_tabs - 10
-         * @hooked woocommerce_upsell_display - 15
-         * @hooked woocommerce_output_related_products - 20
+         * Default WooCommerce tabs and related products
          */
         do_action( 'woocommerce_after_single_product_summary' );
         ?>

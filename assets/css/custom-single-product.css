@@ -12,7 +12,7 @@
 .sponsored-text {
   color: white;
   background-color: black;
-  padding: 2px;
+  padding: 3px;
   border-radius: 10%;
 }
 
@@ -169,7 +169,7 @@
 .rifat-finance-button {
   width: 100%;
   padding: 14px 24px;
-  border-radius: 8px;
+  border-radius: 30px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
@@ -191,10 +191,6 @@
   background-color: #fff;
   color: #111;
   border: 1px solid #111;
-}
-
-.rifat-finance-button:hover {
-  background-color: #f8f8f8;
 }
 
 /* Contact Options */
@@ -294,6 +290,17 @@
 }
 
 @media (max-width: 480px) {
+  .custom-product-back-button {
+    position: absolute;
+    left: 240px;
+    bottom: -8px;
+  }
+
+  .sponsored-text {
+    font-size: 14px;
+    position: absolute;
+    bottom: 0px;
+  }
   .rifat-partner-logos {
     gap: 20px;
   }
