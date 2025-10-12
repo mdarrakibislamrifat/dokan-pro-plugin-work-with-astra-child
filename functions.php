@@ -27,13 +27,13 @@ add_action( 'wp_enqueue_scripts', 'child_enqueue_styles', 15 );
 
 
 // Enque single page product custom css
-function single_product_custom_css() {
+function rifat_custom_single_product() {
     if (is_product()) {
-        wp_enqueue_style('custom-single-product-css', get_stylesheet_directory_uri() . '/assets/css/single-product.css', array(), '1.0.0', 'all');
+        wp_enqueue_style('custom-single-product-css', get_stylesheet_directory_uri() . '/assets/css/custom-single-product.css', array(), '1.0.0', 'all');
     }
 }
 
-add_action( 'wp_enqueue_scripts', 'single_product_custom_css' );
+add_action( 'wp_enqueue_scripts', 'rifat_custom_single_product' );
 
 
 // Shortcode for Custom Search Form
