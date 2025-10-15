@@ -339,3 +339,56 @@ function custom_search_results_shortcode() {
     return ob_get_clean();
 }
 add_shortcode('custom_search_results', 'custom_search_results_shortcode');
+
+
+
+
+
+
+
+
+
+// Mail function for contact seller form
+add_action('wp_ajax_send_vendor_email', 'rifat_send_vendor_email');
+add_action('wp_ajax_nopriv_send_vendor_email', 'rifat_send_vendor_email');
+
+function rifat_send_vendor_email() {
+    if (!isset($_POST['product_id'])) {
+        wp_send_json(['success'=>false, 'message'=>'Product ID missing.']);
+    }
+
+    $product_id = intval($_POST['product_id']);
+    $product = wc_get_product($product_id);
+    if (!$product) wp_send_json(['success'=>false, 'message'=>'Invalid product.']);
+
+    // Vendor info
+    $vendor_id = get_post_field('post_author', $product_id);
+    $vendor = get_userdata($vendor_id);
+    if (!$vendor) wp_send_json(['success'=>false, 'message'=>'Vendor not found.']);
+    $vendor_email = $vendor->user_email;
+
+    // Current user (sender)
+    $current_user = wp_get_current_user();
+    if (!$current_user->exists()) wp_send_json(['success'=>false, 'message'=>'You must be logged in.']);
+    $sender_email = sanitize_email($_POST['email']);
+    $sender_name = sanitize_text_field($_POST['first_name'] . ' ' . $_POST['last_name']);
+
+    // Message
+    $phone = sanitize_text_field($_POST['phone']);
+    $postal_code = sanitize_text_field($_POST['postal_code']);
+    $message = sanitize_textarea_field($_POST['message']);
+
+    $subject = "New Inquiry about: " . $product->get_name();
+    $body = "You have a new inquiry from $sender_name ($sender_email)\n\n";
+    $body .= "Phone: $phone\nPostal Code: $postal_code\n\nMessage:\n$message";
+
+    $headers = ["From: $sender_name <$sender_email>"];
+
+    $mail_sent = wp_mail($vendor_email, $subject, $body, $headers);
+
+    if($mail_sent){
+        wp_send_json(['success'=>true, 'message'=>'Message sent successfully!']);
+    } else {
+        wp_send_json(['success'=>false, 'message'=>'Failed to send message.']);
+    }
+}

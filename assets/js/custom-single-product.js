@@ -46,31 +46,47 @@ document.addEventListener("DOMContentLoaded", function () {
 
 document.addEventListener("DOMContentLoaded", function () {
     const emailBtn = document.getElementById("emailSellerBtn");
-    const chatLink = document.querySelector(".chat-link"); // select chat link
+    const chatLink = document.querySelector(".chat-link");
     const modal = document.getElementById("emailSellerModal");
     const closeModal = document.getElementById("closeModalBtn");
+    const form = document.getElementById("rifat-email-form");
 
     // Function to open modal
     const openModal = (e) => {
-        e.preventDefault(); // prevent default link behavior
+        e.preventDefault();
         modal.showModal();
     };
 
-    // Add click events
     if (emailBtn) emailBtn.addEventListener("click", openModal);
     if (chatLink) chatLink.addEventListener("click", openModal);
 
-    // Close modal button
-    if (closeModal) {
-        closeModal.addEventListener("click", () => {
-            modal.close();
-        });
-    }
+    // Close modal
+    if (closeModal) closeModal.addEventListener("click", () => {
+        modal.close();
+    });
 
-    // Close modal on ESC key
+    // Close on ESC
     window.addEventListener("keydown", function (e) {
-        if (e.key === "Escape" && modal.open) {
-            modal.close();
-        }
+        if (e.key === "Escape" && modal.open) modal.close();
+    });
+
+    // AJAX form submission
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+        formData.append('action', 'send_vendor_email');
+        formData.append('product_id', "<?php echo $product->get_id(); ?>");
+
+        fetch("<?php echo admin_url('admin-ajax.php'); ?>", {
+            method: "POST",
+            body: formData
+        })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) modal.close();
+            })
+            .catch(err => console.log(err));
     });
 });

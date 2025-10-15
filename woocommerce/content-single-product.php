@@ -59,7 +59,7 @@ if ( $stock_quantity ) {
 
                 </div>
 
-                <!-- Request Information Box -->
+
                 <!-- Request Information Box -->
                 <div class="rifat-request-information">
                     <h2 class="rifat-request-title">Request information</h2>
@@ -76,7 +76,8 @@ if ( $stock_quantity ) {
                     </div>
                 </div>
 
-                <!--  Email Seller Modal -->
+
+                <!-- Email Seller Modal -->
                 <dialog id="emailSellerModal" class="modal">
                     <div class="modal-box">
                         <h3 class="text-lg font-bold">
@@ -85,40 +86,53 @@ if ( $stock_quantity ) {
 
                         <p class="py-4">Fill in your details and message to contact the seller.</p>
 
-                        <form method="dialog" class="rifat-email-form">
+                        <?php 
+        $current_user = wp_get_current_user();
+        $first_name = $current_user->first_name ?? '';
+        $last_name = $current_user->last_name ?? '';
+        $user_email = $current_user->user_email ?? '';
+        ?>
+
+                        <form id="rifat-email-form" method="post" class="rifat-email-form">
                             <label>
                                 <span>First Name</span>
-                                <input type="text" class="input" placeholder="Enter first your name" required>
+                                <input type="text" name="first_name" class="input" placeholder="Enter your first name"
+                                    value="<?php echo esc_attr($first_name); ?>" required>
                             </label>
                             <label>
                                 <span>Last Name</span>
-                                <input type="text" class="input" placeholder="Enter your last name" required>
+                                <input type="text" name="last_name" class="input" placeholder="Enter your last name"
+                                    value="<?php echo esc_attr($last_name); ?>" required>
                             </label>
                             <label>
                                 <span>Your Email</span>
-                                <input type="email" class="input" placeholder="Enter your email" required>
+                                <input type="email" name="email" class="input" placeholder="Enter your email"
+                                    value="<?php echo esc_attr($user_email); ?>" required>
                             </label>
                             <label>
                                 <span>Your Phone</span>
-                                <input type="tel" class="input" placeholder="Enter your phone number" required>
+                                <input type="tel" name="phone" class="input" placeholder="Enter your phone number"
+                                    required>
                             </label>
                             <label>
                                 <span>Postal Code</span>
-                                <input type="text" class="input" placeholder="Enter your postal code" required>
+                                <input type="text" name="postal_code" class="input" placeholder="Enter your postal code"
+                                    required>
                             </label>
-
                             <label>
                                 <span>Your Message</span>
-                                <textarea class="textarea" placeholder="Write your message..." required></textarea>
+                                <textarea name="message" class="textarea" placeholder="Write your message..."
+                                    required></textarea>
                             </label>
 
                             <div class="modal-action">
                                 <button type="submit" class="btn">Send Message</button>
-                                <button class="btn" id="closeModalBtn">Close</button>
+                                <button class="btn" type="button" id="closeModalBtn">Close</button>
                             </div>
                         </form>
                     </div>
                 </dialog>
+
 
 
 
