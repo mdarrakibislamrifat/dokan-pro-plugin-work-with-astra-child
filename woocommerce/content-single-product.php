@@ -150,3 +150,30 @@ if ( $stock_quantity ) {
     </div> <!-- 📑 Tabs (Description, Additional Info, Reviews) -->
     <div class="custom-product-tabs"> <?php do_action( 'woocommerce_after_single_product_summary' ); ?> </div>
 </div> <?php do_action( 'woocommerce_after_single_product' ); ?>
+
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const form = document.getElementById("rifat-email-form");
+
+    form.addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+        formData.append('action', 'send_vendor_email');
+        formData.append('product_id', "<?php echo $product->get_id(); ?>");
+
+        fetch("<?php echo admin_url('admin-ajax.php'); ?>", {
+                method: "POST",
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+            })
+            .catch(err => console.log(err));
+    });
+});
+</script>
