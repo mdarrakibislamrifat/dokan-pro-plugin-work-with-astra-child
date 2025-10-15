@@ -36,6 +36,17 @@ function rifat_custom_single_product() {
 add_action( 'wp_enqueue_scripts', 'rifat_custom_single_product' );
 
 
+// enque js file
+// Enque single page product custom css
+function rifat_custom_single_product_js() {
+    if (is_product()) {
+        wp_enqueue_script('custom-single-product-js', get_stylesheet_directory_uri() . '/assets/js/custom-single-product.js', array('jquery'), '1.0.0', true);
+    }
+}
+
+add_action( 'wp_enqueue_scripts', 'rifat_custom_single_product_js' );
+
+
 // Shortcode for Custom Search Form
 function custom_search_form_shortcode() {
     ob_start();

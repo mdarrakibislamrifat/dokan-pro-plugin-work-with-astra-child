@@ -250,6 +250,20 @@
   font-size: 14px;
 }
 
+/* modal*/
+.modal-box {
+  width: 600px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+  .modal-box {
+    width: 95%; /* almost full width */
+    max-width: 95%;
+    padding: 15px;
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .rifat-single-product-title {
