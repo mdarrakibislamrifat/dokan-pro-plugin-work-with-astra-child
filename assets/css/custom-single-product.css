@@ -7,13 +7,16 @@
 
 .sponsored-badge {
   position: absolute;
+  top: 15px;
+  left: 10px;
 }
 
 .sponsored-text {
-  color: white;
-  background-color: black;
-  padding: 3px;
-  border-radius: 10%;
+  color: rgb(0, 0, 0);
+  font: 12px;
+  background-color: rgb(255, 255, 255);
+  padding: 5px;
+  border-radius: 50%;
 }
 
 .custom-product-back-button {
@@ -21,11 +24,12 @@
   gap: 10px;
   position: absolute;
   left: 400px;
+  top: 15px;
 }
 
 .back-button,
 .wishlist-button {
-  background-color: transparent;
+  background-color: white;
   color: black;
   border: none;
   padding: 12px 12px;

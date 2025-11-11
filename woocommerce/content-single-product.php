@@ -9,6 +9,8 @@ if ( $stock_quantity ) {
     $stock_text = 'Out of stock';
 }
 
+$location = get_post_meta( $product->get_id(), '_product_location', true );
+
 ?>
 <div id="product-<?php the_ID(); ?>" <?php wc_product_class( 'custom-single-product', $product ); ?>>
     <div class="custom-product-container">
@@ -33,9 +35,15 @@ if ( $stock_quantity ) {
         <div class="rifat-product-right">
             <div class="summary entry-summary">
                 <!-- Product Title -->
-                <h1 class="rifat-single-product-title">2024 Honda Accord EX FWD</h1>
+                <h1 class="rifat-single-product-title">
+                    <?php echo esc_html( $product->get_name() ); ?>
+                </h1>
+
                 <!-- Location -->
-                <p class="rifat-single-product-location">Alhambra, CA (20 mi away)</p>
+                <p class="rifat-single-product-location">
+                    <?php echo esc_html( $location ? $location : 'Location not set' ); ?>
+                </p>
+
                 <!-- Price -->
                 <div class="rifat-single-product-price">
                     <?php echo wp_kses_post( $product->get_price_html() ); ?>
@@ -52,9 +60,15 @@ if ( $stock_quantity ) {
                     </div> <!-- Right: Dealer Rating -->
                     <div class="rifat-rating-section">
                         <p class="rifat-dealer-label">Dealer rating</p>
-                        <div class="rifat-stars-reviews"> <span class="rifat-stars">★★★<span
-                                    class="rifat-half-star">★</span><span class="rifat-empty-star">★</span></span> <a
-                                href="#" class="rifat-reviews-link">(7 reviews)</a> </div>
+                        <div class="rifat-stars-reviews">
+                            <?php 
+    // Display average rating stars
+    echo wc_get_rating_html( $product->get_average_rating() ); 
+    ?>
+                            <a href="#reviews" class="rifat-reviews-link">(<?php echo $product->get_review_count(); ?>
+                                reviews)</a>
+                        </div>
+
                     </div>
 
                 </div>
@@ -133,21 +147,10 @@ if ( $stock_quantity ) {
                     </div>
                 </dialog>
 
-
-
-
-
-
-                <!-- Pre-qualify Text -->
-                <p class="rifat-prequalify-text"> Pre-qualify for financing with no impact to your credit score. </p>
-                <!-- Partner Logos -->
-                <div class="rifat-partner-logos">
-                    <div class="rifat-logo-placeholder">Capital One</div>
-                    <div class="rifat-logo-placeholder">CHASE</div>
-                </div>
             </div>
         </div>
-    </div> <!-- 📑 Tabs (Description, Additional Info, Reviews) -->
+    </div>
+    <!-- 📑 Tabs (Description, Additional Info, Reviews) -->
     <div class="custom-product-tabs"> <?php do_action( 'woocommerce_after_single_product_summary' ); ?> </div>
 </div> <?php do_action( 'woocommerce_after_single_product' ); ?>
 

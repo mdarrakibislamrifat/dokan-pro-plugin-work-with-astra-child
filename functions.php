@@ -47,298 +47,102 @@ function rifat_custom_single_product_js() {
 add_action( 'wp_enqueue_scripts', 'rifat_custom_single_product_js' );
 
 
-// Shortcode for Custom Search Form
-function custom_search_form_shortcode() {
-    ob_start();
-    ?>
-<div class="custom-search-wrapper">
-    <h1 style="color: #fff;">By Make & Model</h1>
-    <form role="search" method="get" class="custom-search-form" action="<?php echo esc_url(home_url('/')); ?>">
-
-        <select name="make" class="custom-search-select">
-            <option value="">All makes</option>
-            <?php
-                $makes = get_terms(array(
-                    'taxonomy' => 'make',
-                    'hide_empty' => false,
-                ));
-                if (!empty($makes) && !is_wp_error($makes)) {
-                    foreach ($makes as $make) {
-                        echo '<option value="' . esc_attr($make->slug) . '">' . esc_html($make->name) . '</option>';
-                    }
-                }
-                ?>
-        </select>
-
-        <select name="model" class="custom-search-select">
-            <option value="">All models</option>
-            <?php
-                $models = get_terms(array(
-                    'taxonomy' => 'model',
-                    'hide_empty' => false,
-                ));
-                if (!empty($models) && !is_wp_error($models)) {
-                    foreach ($models as $model) {
-                        echo '<option value="' . esc_attr($model->slug) . '">' . esc_html($model->name) . '</option>';
-                    }
-                }
-                ?>
-        </select>
-
-        <div class="price-range">
-            <input type="text" name="min_price" class="price-input" placeholder="Min price    $">
-            <span class="price-separator">to</span>
-            <input type="text" name="max_price" class="price-input" placeholder="Max price    $">
-        </div>
-
-        <div class="location-radius">
-            <input type="text" name="zipcode" class="location-input" placeholder="90049" value="90049">
-            <select name="radius" class="radius-select">
-                <option value="50">50 mi</option>
-                <option value="25">25 mi</option>
-                <option value="50" selected>50 mi</option>
-                <option value="100">100 mi</option>
-                <option value="200">200 mi</option>
-            </select>
-
-        </div>
-
-        <button type="submit" class="search-button">Search</button>
-    </form>
-</div>
-
-<style>
-.custom-search-wrapper {
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.custom-search-wrapper h1 {
-    font-size: 28px;
-    font-weight: bold;
-    margin-bottom: 30px;
-    color: #000;
-}
-
-.custom-search-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.custom-search-select,
-.price-input,
-.location-input,
-.radius-select {
-    width: 100%;
-    padding: 15px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    background-color: #fff;
-    color: #666;
-}
-
-.price-range {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.price-range .price-input {
-    flex: 1;
-}
-
-.price-separator {
-    color: #000000ff;
-    font-size: 16px;
-}
-
-.location-radius {
-    display: flex;
-    gap: 15px;
-}
-
-.location-input {
-    flex: 1;
-}
-
-.radius-select {
-    flex: 1;
-}
-
-.search-button {
-    width: 100%;
-    padding: 18px;
-    background-color: #008000;
-    color: #fff;
-    font-size: 18px;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-}
-
-.search-button:hover {
-    background-color: #006600;
-}
-</style>
-<?php
-    return ob_get_clean();
-}
-add_shortcode('custom_search_form', 'custom_search_form_shortcode');
 
 
 
 
-
-// Shortcode for displaying products in Flexbox grid (initial 6 + search filter)
-function custom_search_results_shortcode() {
+// Six Products Shortcode
+function custom_six_products_shortcode() {
     ob_start();
 
-    // Query args
-    $args = array(
-        'post_type'      => 'product', // replace with your CPT if different
-        'posts_per_page' => 6,         // show 6 products initially
+    $args = [
+        'post_type'      => 'product',
+        'posts_per_page' => 6,
         'orderby'        => 'date',
         'order'          => 'DESC',
-    );
+    ];
 
-    $tax_query  = array('relation' => 'AND');
-    $meta_query = array('relation' => 'AND');
-    $has_filter = false;
-
-    // Apply filters if form submitted
-    if (!empty($_GET['make'])) {
-        $tax_query[] = array(
-            'taxonomy' => 'make',
-            'field'    => 'slug',
-            'terms'    => sanitize_text_field($_GET['make']),
-        );
-        $has_filter = true;
-    }
-    if (!empty($_GET['model'])) {
-        $tax_query[] = array(
-            'taxonomy' => 'model',
-            'field'    => 'slug',
-            'terms'    => sanitize_text_field($_GET['model']),
-        );
-        $has_filter = true;
-    }
-    if (!empty($_GET['min_price'])) {
-        $meta_query[] = array(
-            'key'     => 'price',
-            'value'   => floatval($_GET['min_price']),
-            'compare' => '>=',
-            'type'    => 'NUMERIC'
-        );
-        $has_filter = true;
-    }
-    if (!empty($_GET['max_price'])) {
-        $meta_query[] = array(
-            'key'     => 'price',
-            'value'   => floatval($_GET['max_price']),
-            'compare' => '<=',
-            'type'    => 'NUMERIC'
-        );
-        $has_filter = true;
-    }
-
-    if ($has_filter) {
-        if (count($tax_query) > 1) $args['tax_query'] = $tax_query;
-        if (count($meta_query) > 1) $args['meta_query'] = $meta_query;
-    }
-
-    // Run query
     $query = new WP_Query($args);
     ?>
-
-<div class="custom-product-grid">
-    <?php
-        if ($query->have_posts()) {
-            while ($query->have_posts()) {
-                $query->the_post();
-                $price = get_post_meta(get_the_ID(), 'price', true);
-                $brand = wp_get_post_terms(get_the_ID(), 'make', array('fields' => 'names'));
+    
+    <div class="custom-product-grid">
+        <?php if ($query->have_posts()) : ?>
+            <?php while ($query->have_posts()) : $query->the_post(); ?>
+                <?php
+                $price = get_post_meta(get_the_ID(), '_price', true);
+                $brand = wp_get_post_terms(get_the_ID(), 'product_brand', ['fields' => 'names']);
                 ?>
-    <div class="custom-product-item">
-        <?php if (has_post_thumbnail()) : ?>
-        <a href="<?php the_permalink(); ?>">
-            <?php the_post_thumbnail('medium'); ?>
-        </a>
-        <?php else: ?>
-        <img src="https://via.placeholder.com/200x150" alt="<?php the_title(); ?>">
-        <?php endif; ?>
-        <div class="product-name">
-            <a href="<?php echo esc_url(get_permalink()); ?>"><?php the_title(); ?></a>
-        </div>
+                <div class="custom-product-item">
+                    <a href="<?php the_permalink(); ?>">
+                        <?php if (has_post_thumbnail()) {
+                            the_post_thumbnail('medium');
+                        } else {
+                            echo '<img src="https://via.placeholder.com/200x150" alt="' . esc_attr(get_the_title()) . '">';
+                        } ?>
+                    </a>
+                    <div class="product-name">
+                        <a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
+                    </div>
 
-        <?php if (!is_wp_error($brand) && !empty($brand)) : ?>
-        <div class="product-brand"><?php echo esc_html($brand[0]); ?></div>
+                    <?php if (!empty($brand)) : ?>
+                        <div class="product-brand"><?php echo esc_html($brand[0]); ?></div>
+                    <?php endif; ?>
+
+                    <?php if ($price) : ?>
+                        <div class="product-price">$<?php echo esc_html($price); ?></div>
+                    <?php endif; ?>
+                </div>
+            <?php endwhile; ?>
+        <?php else : ?>
+            <p class="no-results">No products found.</p>
         <?php endif; ?>
-        <?php if ($price) : ?>
-        <div class="product-price">$<?php echo esc_html($price); ?></div>
-        <?php endif; ?>
+        <?php wp_reset_postdata(); ?>
     </div>
+
+    <style>
+    .custom-product-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    .custom-product-item {
+        flex: 1 1 calc(33.333% - 20px);
+        box-sizing: border-box;
+        text-align: center;
+        padding: 10px;
+        border-radius: 8px;
+    }
+    .custom-product-item img {
+        max-width: 100%;
+        max-height: 150px;
+        height: auto;
+        border-radius: 4px;
+    }
+    .product-price { display: none; }
+    .product-name a {
+        font-weight: bold;
+        color: #fff;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+    @media (max-width: 768px) {
+        .custom-product-item { flex: 1 1 calc(50% - 20px); }
+    }
+    @media (max-width: 480px) {
+        .custom-product-item { flex: 1 1 100%; }
+    }
+    </style>
+
     <?php
-            }
-        } else {
-            echo '<p class="no-results">No products found.</p>';
-        }
-        wp_reset_postdata();
-        ?>
-</div>
-
-<style>
-.custom-product-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    max-width: 900px;
-    margin: 0 auto;
-}
-
-.custom-product-item {
-    flex: 1 1 calc(33.333% - 20px);
-    /* 3 columns */
-    box-sizing: border-box;
-    text-align: center;
-    padding: 10px;
-    border-radius: 8px;
-}
-
-.custom-product-item img {
-    max-width: 100%;
-    max-height: 150px;
-    height: auto;
-    border-radius: 4px;
-}
-
-.product-name a {
-    font-weight: bold;
-    color: #ffffffff;
-    text-decoration: underline;
-    cursor: pointer;
-}
-
-/* Responsive for tablets and phones */
-@media (max-width: 768px) {
-    .custom-product-item {
-        flex: 1 1 calc(50% - 20px);
-        /* 2 per row */
-    }
-}
-
-@media (max-width: 480px) {
-    .custom-product-item {
-        flex: 1 1 100%;
-        /* 1 per row */
-    }
-}
-</style>
-
-<?php
     return ob_get_clean();
 }
-add_shortcode('custom_search_results', 'custom_search_results_shortcode');
+add_shortcode('six_products', 'custom_six_products_shortcode');
+
+
+
+
 
 
 
@@ -392,3 +196,376 @@ function rifat_send_vendor_email() {
         wp_send_json(['success'=>false, 'message'=>'Failed to send message.']);
     }
 }
+
+
+
+
+
+
+
+
+
+
+// Add These Fields to the Dokan Product Form
+
+// Show vehicle fields on both "Add New" and "Edit" product pages in Dokan
+add_action('dokan_product_edit_after_main', 'add_vehicle_fields_to_dokan_form');
+add_action('dokan_new_product_after_main',  'add_vehicle_fields_to_dokan_form');
+
+function add_vehicle_fields_to_dokan_form($post) {
+    // When adding a new product, $post may be null-ish — handle safely
+    $post_id = isset($post->ID) ? $post->ID : 0;
+
+    $make = get_post_meta($post_id, '_vehicle_make', true);
+    $model = get_post_meta($post_id, '_vehicle_model', true);
+    $year = get_post_meta($post_id, '_vehicle_year', true);
+    $engine = get_post_meta($post_id, '_vehicle_engine', true);
+    $transmission = get_post_meta($post_id, '_vehicle_transmission', true);
+    $trim = get_post_meta($post_id, '_vehicle_trim', true);
+    ?>
+    <div class="dokan-form-group">
+        <label for="vehicle_make"><?php _e('Make', 'your-textdomain'); ?></label>
+        <input id="vehicle_make" type="text" name="vehicle_make" value="<?php echo esc_attr($make); ?>" class="dokan-form-control"/>
+    </div>
+    <div class="dokan-form-group">
+        <label for="vehicle_model"><?php _e('Model', 'your-textdomain'); ?></label>
+        <input id="vehicle_model" type="text" name="vehicle_model" value="<?php echo esc_attr($model); ?>" class="dokan-form-control"/>
+    </div>
+    <div class="dokan-form-group">
+        <label for="vehicle_year"><?php _e('Year', 'your-textdomain'); ?></label>
+        <input id="vehicle_year" type="text" name="vehicle_year" value="<?php echo esc_attr($year); ?>" class="dokan-form-control"/>
+    </div>
+    <div class="dokan-form-group">
+        <label for="vehicle_engine"><?php _e('Engine', 'your-textdomain'); ?></label>
+        <input id="vehicle_engine" type="text" name="vehicle_engine" value="<?php echo esc_attr($engine); ?>" class="dokan-form-control"/>
+    </div>
+    <div class="dokan-form-group">
+        <label for="vehicle_transmission"><?php _e('Transmission', 'your-textdomain'); ?></label>
+        <input id="vehicle_transmission" type="text" name="vehicle_transmission" value="<?php echo esc_attr($transmission); ?>" class="dokan-form-control"/>
+    </div>
+    <div class="dokan-form-group">
+        <label for="vehicle_trim"><?php _e('Trim', 'your-textdomain'); ?></label>
+        <input id="vehicle_trim" type="text" name="vehicle_trim" value="<?php echo esc_attr($trim); ?>" class="dokan-form-control"/>
+    </div>
+    <?php
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// Save handler (robust for 1 or 2 args)
+add_action('dokan_process_product_meta', 'save_vehicle_fields_dokan', 10, 2);
+
+function save_vehicle_fields_dokan( $product_id, $postdata = array() ) {
+    // defensive: make sure we have a product id
+    if ( empty( $product_id ) ) {
+        return;
+    }
+
+    // optional debug - logs POST keys when WP_DEBUG is on
+    if ( defined('WP_DEBUG') && WP_DEBUG ) {
+        error_log( 'save_vehicle_fields_dokan called for product_id: ' . $product_id );
+        error_log( '$_POST keys: ' . print_r( array_keys( $_POST ), true ) );
+    }
+
+    $fields = array( 'make', 'model', 'year', 'engine', 'transmission', 'trim' );
+
+    foreach ( $fields as $field ) {
+        $key = 'vehicle_' . $field;
+        if ( isset( $_POST[ $key ] ) ) {
+            $value = sanitize_text_field( wp_unslash( $_POST[ $key ] ) );
+            update_post_meta( $product_id, '_vehicle_' . $field, $value );
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+// Load all vehicle data and log in console
+add_action('wp_footer', function () {
+    if (!current_user_can('manage_options')) return; // optional: only admin sees it
+
+    $args = [
+        'post_type'      => 'product',
+        'posts_per_page' => -1, 
+        'post_status'    => 'publish',
+    ];
+
+    $products = get_posts($args);
+    $all_vehicle_data = [];
+
+    $fields = ['make', 'model', 'year', 'engine', 'transmission', 'trim'];
+
+    foreach ($products as $product) {
+        $data = [];
+        foreach ($fields as $field) {
+            $data[$field] = get_post_meta($product->ID, '_vehicle_' . $field, true);
+        }
+        $all_vehicle_data[$product->ID] = $data;
+    }
+    ?>
+    <script>
+        console.log("All Vehicle Data:", <?php echo wp_json_encode($all_vehicle_data); ?>);
+    </script>
+    <?php
+});
+
+
+
+
+
+
+
+
+// Frontend Filter (Select Your Truck)
+add_shortcode('vehicle_filter', function () {
+    ob_start();
+    ?>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .vehicle-filter-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
+
+        .vehicle-filter-container h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .filter-group select {
+            padding: 0px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background-color: #f5f5f5;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 20px;
+            padding-right: 40px;
+        }
+
+        .filter-group select:hover {
+            background-color: #efefef;
+            border-color: #d0d0d0;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: #ff4d26;
+            background-color: white;
+        }
+
+        .search-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: #ff4d26;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background-color: #e63d15;
+        }
+
+        .search-btn:active {
+            background-color: #cc3410;
+        }
+
+        @media (max-width: 600px) {
+            .vehicle-filter-container {
+                padding: 25px;
+            }
+
+            .vehicle-filter-container h2 {
+                font-size: 24px;
+                margin-bottom: 25px;
+            }
+
+            .filter-grid {
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+
+            .filter-group select {
+                padding: 11px 12px;
+                font-size: 13px;
+            }
+
+            .search-btn {
+                padding: 12px;
+                font-size: 15px;
+            }
+        }
+    </style>
+
+    <div class="vehicle-filter-container">
+        <h2>Select Your Truck</h2>
+        <form id="vehicle-filter" action="<?php echo esc_url(wc_get_page_permalink('shop')); ?>" method="GET">
+
+            <div class="filter-grid">
+                <!-- Make -->
+                <div class="filter-group">
+                    <select name="make" required>
+                        <option value="">Make</option>
+                        <?php
+                        $makes = get_terms(['taxonomy' => 'pa_make', 'hide_empty' => false]);
+                        if (!is_wp_error($makes)) {
+                            foreach ($makes as $make) {
+                                echo "<option value='" . esc_attr($make->slug) . "'>" . esc_html($make->name) . "</option>";
+                            }
+                        }
+                        ?>
+                    </select>
+                </div>
+
+                <!-- Model -->
+                <div class="filter-group">
+                    <select name="model" required>
+                        <option value="">Model</option>
+                        <?php
+                        $models = get_terms(['taxonomy' => 'pa_model', 'hide_empty' => false]);
+                        if (!is_wp_error($models)) {
+                            foreach ($models as $model) {
+                                echo "<option value='" . esc_attr($model->slug) . "'>" . esc_html($model->name) . "</option>";
+                            }
+                        }
+                        ?>
+                    </select>
+                </div>
+
+                <!-- Year -->
+                <div class="filter-group">
+                    <select name="year" required>
+                        <option value="">Year</option>
+                        <?php
+                        $years = get_terms(['taxonomy' => 'pa_year', 'hide_empty' => false]);
+                        if (!is_wp_error($years)) {
+                            foreach ($years as $year) {
+                                echo "<option value='" . esc_attr($year->slug) . "'>" . esc_html($year->name) . "</option>";
+                            }
+                        }
+                        ?>
+                    </select>
+                </div>
+
+                <!-- Engine -->
+                <div class="filter-group">
+                    <select name="engine" required>
+                        <option value="">Engine</option>
+                        <?php
+                        $engines = get_terms(['taxonomy' => 'pa_engine', 'hide_empty' => false]);
+                        if (!is_wp_error($engines)) {
+                            foreach ($engines as $engine) {
+                                echo "<option value='" . esc_attr($engine->slug) . "'>" . esc_html($engine->name) . "</option>";
+                            }
+                        }
+                        ?>
+                    </select>
+                </div>
+
+                <!-- Transmission -->
+                <div class="filter-group">
+                    <select name="transmission" required>
+                        <option value="">Transmission</option>
+                        <?php
+                        $transmissions = get_terms(['taxonomy' => 'pa_transmission', 'hide_empty' => false]);
+                        if (!is_wp_error($transmissions)) {
+                            foreach ($transmissions as $transmission) {
+                                echo "<option value='" . esc_attr($transmission->slug) . "'>" . esc_html($transmission->name) . "</option>";
+                            }
+                        }
+                        ?>
+                    </select>
+                </div>
+
+                <!-- Trim -->
+                <div class="filter-group">
+                    <select name="trim" required>
+                        <option value="">Trim</option>
+                        <?php
+                        $trims = get_terms(['taxonomy' => 'pa_trim', 'hide_empty' => false]);
+                        if (!is_wp_error($trims)) {
+                            foreach ($trims as $trim) {
+                                echo "<option value='" . esc_attr($trim->slug) . "'>" . esc_html($trim->name) . "</option>";
+                            }
+                        }
+                        ?>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="search-btn">Search</button>
+        </form>
+    </div>
+    <?php
+    return ob_get_clean();
+});
+
+
+
+// Make the Filter Work (Query Products)
+
+add_action('pre_get_posts', function ($query) {
+    if (!is_admin() && $query->is_main_query() && isset($_GET['make'])) {
+        $tax_query = [];
+        $fields = ['make', 'model', 'year', 'engine', 'transmission', 'trim'];
+
+        foreach ($fields as $field) {
+            if (!empty($_GET[$field])) {
+                $tax_query[] = [
+                    'taxonomy' => 'pa_' . $field,
+                    'field' => 'slug',
+                    'terms' => sanitize_text_field($_GET[$field]),
+                ];
+            }
+        }
+
+        if (!empty($tax_query)) {
+            $query->set('tax_query', $tax_query);
+        }
+    }
+});
