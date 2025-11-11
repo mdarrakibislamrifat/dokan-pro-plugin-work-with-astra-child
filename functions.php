@@ -143,6 +143,11 @@ add_shortcode('six_products', 'custom_six_products_shortcode');
 
 
 
+add_filter('woocommerce_get_shop_page_permalink', function($permalink) {
+    return add_query_arg($_GET, $permalink);
+});
+
+
 
 
 
@@ -288,35 +293,6 @@ function save_vehicle_fields_dokan( $product_id, $postdata = array() ) {
 
 
 
-// Load all vehicle data and log in console
-add_action('wp_footer', function () {
-    if (!current_user_can('manage_options')) return; // optional: only admin sees it
-
-    $args = [
-        'post_type'      => 'product',
-        'posts_per_page' => -1, 
-        'post_status'    => 'publish',
-    ];
-
-    $products = get_posts($args);
-    $all_vehicle_data = [];
-
-    $fields = ['make', 'model', 'year', 'engine', 'transmission', 'trim'];
-
-    foreach ($products as $product) {
-        $data = [];
-        foreach ($fields as $field) {
-            $data[$field] = get_post_meta($product->ID, '_vehicle_' . $field, true);
-        }
-        $all_vehicle_data[$product->ID] = $data;
-    }
-    ?>
-    <script>
-        console.log("All Vehicle Data:", <?php echo wp_json_encode($all_vehicle_data); ?>);
-    </script>
-    <?php
-});
-
 
 
 
@@ -438,7 +414,11 @@ add_shortcode('vehicle_filter', function () {
 
     <div class="vehicle-filter-container">
         <h2>Select Your Truck</h2>
-        <form id="vehicle-filter" action="<?php echo esc_url(wc_get_page_permalink('shop')); ?>" method="GET">
+       <?php
+$shop_id  = wc_get_page_id( 'shop' );
+$shop_url = $shop_id ? get_permalink( $shop_id ) : site_url( '/shop/' );
+?>
+<form id="vehicle-filter" action="<?php echo esc_url( $shop_url ); ?>" method="GET">
 
             <div class="filter-grid">
                 <!-- Make -->
@@ -461,7 +441,7 @@ add_shortcode('vehicle_filter', function () {
 
                 <!-- Model -->
                 <div class="filter-group">
-                    <select name="model" required>
+                    <select name="model" required disabled>
                         <option value="">Model</option>
                         <?php
                         $models = $wpdb->get_col("SELECT DISTINCT meta_value FROM $wpdb->postmeta WHERE meta_key = '_vehicle_model' AND meta_value != ''");
@@ -476,22 +456,22 @@ add_shortcode('vehicle_filter', function () {
 
                 <!-- Year -->
                 <div class="filter-group">
-                    <select name="year" required>
-                        <option value="">Year</option>
-                        <?php
-                        $years = $wpdb->get_col("SELECT DISTINCT meta_value FROM $wpdb->postmeta WHERE meta_key = '_vehicle_year' AND meta_value != ''");
-                        if ($years) {
-                            foreach ($years as $year) {
-                                echo "<option value='" . esc_attr($year) . "'>" . esc_html($year) . "</option>";
-                            }
-                        }
-                        ?>
-                    </select>
+                     <select name="vf_year" required disabled>
+        <option value="">Year</option>
+        <?php
+        $years = $wpdb->get_col("SELECT DISTINCT meta_value FROM $wpdb->postmeta WHERE meta_key = '_vehicle_year' AND meta_value != ''");
+        if ($years) {
+            foreach ($years as $year) {
+                echo "<option value='" . esc_attr($year) . "'>" . esc_html($year) . "</option>";
+            }
+        }
+        ?>
+    </select>
                 </div>
 
                 <!-- Engine -->
                 <div class="filter-group">
-                    <select name="engine" required>
+                    <select name="engine" required disabled>
                         <option value="">Engine</option>
                         <?php
                         $engines = $wpdb->get_col("SELECT DISTINCT meta_value FROM $wpdb->postmeta WHERE meta_key = '_vehicle_engine' AND meta_value != ''");
@@ -506,7 +486,7 @@ add_shortcode('vehicle_filter', function () {
 
                 <!-- Transmission -->
                 <div class="filter-group">
-                    <select name="transmission" required>
+                    <select name="transmission" required disabled>
                         <option value="">Transmission</option>
                         <?php
                         $transmissions = $wpdb->get_col("SELECT DISTINCT meta_value FROM $wpdb->postmeta WHERE meta_key = '_vehicle_transmission' AND meta_value != ''");
@@ -523,7 +503,7 @@ add_shortcode('vehicle_filter', function () {
 
                 <!-- Trim -->
                 <div class="filter-group">
-                    <select name="trim" required>
+                    <select name="trim" required disabled>
                         <option value="">Trim</option>
                         <?php
                         $trims = $wpdb->get_col("SELECT DISTINCT meta_value FROM $wpdb->postmeta WHERE meta_key = '_vehicle_trim' AND meta_value != ''");
@@ -541,31 +521,61 @@ add_shortcode('vehicle_filter', function () {
             <button type="submit" class="search-btn">Search</button>
         </form>
     </div>
+
+<script>
+jQuery(document).ready(function($) {
+    // Enable next dropdown when previous one has a value
+    $('#vehicle-filter select').each(function(index) {
+        $(this).on('change', function() {
+            // Get next select
+            var nextSelect = $('#vehicle-filter select').eq(index + 1);
+            if ($(this).val() !== '') {
+                nextSelect.prop('disabled', false);
+            } else {
+                // If user clears selection, disable all following selects
+                $('#vehicle-filter select').slice(index + 1).prop('disabled', true).val('');
+            }
+        });
+    });
+});
+</script>
+
     <?php
+    
     return ob_get_clean();
 });
 
 
 
-// Make the Filter Work (Query Products)
+
+
 
 add_action('pre_get_posts', function ($query) {
-    if (!is_admin() && $query->is_main_query() && isset($_GET['make'])) {
-        $tax_query = [];
-        $fields = ['make', 'model', 'year', 'engine', 'transmission', 'trim'];
+    if (!is_admin() && $query->is_main_query() && (is_shop() || $query->is_post_type_archive('product'))) {
+
+        $fields = ['make', 'model', 'vf_year', 'engine', 'transmission', 'trim'];
+        $meta_query = ['relation' => 'AND'];
+        $has_filter = false;
 
         foreach ($fields as $field) {
             if (!empty($_GET[$field])) {
-                $tax_query[] = [
-                    'taxonomy' => 'pa_' . $field,
-                    'field' => 'slug',
-                    'terms' => sanitize_text_field($_GET[$field]),
+                $meta_query[] = [
+                    'key' => '_vehicle_' . ($field === 'vf_year' ? 'year' : $field), // map back to meta key
+                    'value' => sanitize_text_field($_GET[$field]),
+                    'compare' => '='
                 ];
+                $has_filter = true;
             }
         }
 
-        if (!empty($tax_query)) {
-            $query->set('tax_query', $tax_query);
+        if ($has_filter) {
+            $query->set('meta_query', $meta_query);
+            $query->set('post_type', 'product');
         }
     }
 });
+
+
+
+
+
