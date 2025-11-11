@@ -257,10 +257,6 @@ function add_vehicle_fields_to_dokan_form($post) {
 
 
 
-
-
-
-
 // Save handler (robust for 1 or 2 args)
 add_action('dokan_process_product_meta', 'save_vehicle_fields_dokan', 10, 2);
 
@@ -286,9 +282,6 @@ function save_vehicle_fields_dokan( $product_id, $postdata = array() ) {
         }
     }
 }
-
-
-
 
 
 
@@ -330,10 +323,11 @@ add_action('wp_footer', function () {
 
 
 
-
 // Frontend Filter (Select Your Truck)
 add_shortcode('vehicle_filter', function () {
+    global $wpdb;
     ob_start();
+
     ?>
     <style>
         * {
@@ -452,12 +446,15 @@ add_shortcode('vehicle_filter', function () {
                     <select name="make" required>
                         <option value="">Make</option>
                         <?php
-                        $makes = get_terms(['taxonomy' => 'pa_make', 'hide_empty' => false]);
-                        if (!is_wp_error($makes)) {
-                            foreach ($makes as $make) {
-                                echo "<option value='" . esc_attr($make->slug) . "'>" . esc_html($make->name) . "</option>";
+                            // Get unique makes from all products
+                            $makes = $wpdb->get_col("SELECT DISTINCT meta_value FROM $wpdb->postmeta WHERE meta_key = '_vehicle_make' AND meta_value != ''");
+
+                            if ($makes) {
+                                foreach ($makes as $make) {
+                                    echo "<option value='" . esc_attr($make) . "'>" . esc_html($make) . "</option>";
+                                }
                             }
-                        }
+
                         ?>
                     </select>
                 </div>
@@ -467,10 +464,10 @@ add_shortcode('vehicle_filter', function () {
                     <select name="model" required>
                         <option value="">Model</option>
                         <?php
-                        $models = get_terms(['taxonomy' => 'pa_model', 'hide_empty' => false]);
-                        if (!is_wp_error($models)) {
+                        $models = $wpdb->get_col("SELECT DISTINCT meta_value FROM $wpdb->postmeta WHERE meta_key = '_vehicle_model' AND meta_value != ''");
+                        if ($models) {
                             foreach ($models as $model) {
-                                echo "<option value='" . esc_attr($model->slug) . "'>" . esc_html($model->name) . "</option>";
+                                echo "<option value='" . esc_attr($model) . "'>" . esc_html($model) . "</option>";
                             }
                         }
                         ?>
@@ -482,10 +479,10 @@ add_shortcode('vehicle_filter', function () {
                     <select name="year" required>
                         <option value="">Year</option>
                         <?php
-                        $years = get_terms(['taxonomy' => 'pa_year', 'hide_empty' => false]);
-                        if (!is_wp_error($years)) {
+                        $years = $wpdb->get_col("SELECT DISTINCT meta_value FROM $wpdb->postmeta WHERE meta_key = '_vehicle_year' AND meta_value != ''");
+                        if ($years) {
                             foreach ($years as $year) {
-                                echo "<option value='" . esc_attr($year->slug) . "'>" . esc_html($year->name) . "</option>";
+                                echo "<option value='" . esc_attr($year) . "'>" . esc_html($year) . "</option>";
                             }
                         }
                         ?>
@@ -497,10 +494,10 @@ add_shortcode('vehicle_filter', function () {
                     <select name="engine" required>
                         <option value="">Engine</option>
                         <?php
-                        $engines = get_terms(['taxonomy' => 'pa_engine', 'hide_empty' => false]);
-                        if (!is_wp_error($engines)) {
+                        $engines = $wpdb->get_col("SELECT DISTINCT meta_value FROM $wpdb->postmeta WHERE meta_key = '_vehicle_engine' AND meta_value != ''");
+                        if ($engines) {
                             foreach ($engines as $engine) {
-                                echo "<option value='" . esc_attr($engine->slug) . "'>" . esc_html($engine->name) . "</option>";
+                                echo "<option value='" . esc_attr($engine) . "'>" . esc_html($engine) . "</option>";
                             }
                         }
                         ?>
@@ -512,13 +509,15 @@ add_shortcode('vehicle_filter', function () {
                     <select name="transmission" required>
                         <option value="">Transmission</option>
                         <?php
-                        $transmissions = get_terms(['taxonomy' => 'pa_transmission', 'hide_empty' => false]);
-                        if (!is_wp_error($transmissions)) {
+                        $transmissions = $wpdb->get_col("SELECT DISTINCT meta_value FROM $wpdb->postmeta WHERE meta_key = '_vehicle_transmission' AND meta_value != ''");
+
+                        if ($transmissions) {
                             foreach ($transmissions as $transmission) {
-                                echo "<option value='" . esc_attr($transmission->slug) . "'>" . esc_html($transmission->name) . "</option>";
+                                echo "<option value='" . esc_attr($transmission) . "'>" . esc_html($transmission) . "</option>";
                             }
                         }
                         ?>
+                        
                     </select>
                 </div>
 
@@ -527,10 +526,11 @@ add_shortcode('vehicle_filter', function () {
                     <select name="trim" required>
                         <option value="">Trim</option>
                         <?php
-                        $trims = get_terms(['taxonomy' => 'pa_trim', 'hide_empty' => false]);
-                        if (!is_wp_error($trims)) {
+                        $trims = $wpdb->get_col("SELECT DISTINCT meta_value FROM $wpdb->postmeta WHERE meta_key = '_vehicle_trim' AND meta_value != ''");
+
+                       if ($trims) {
                             foreach ($trims as $trim) {
-                                echo "<option value='" . esc_attr($trim->slug) . "'>" . esc_html($trim->name) . "</option>";
+                                echo "<option value='" . esc_attr($trim) . "'>" . esc_html($trim) . "</option>";
                             }
                         }
                         ?>
