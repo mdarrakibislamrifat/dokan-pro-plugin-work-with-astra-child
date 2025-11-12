@@ -286,16 +286,74 @@ add_shortcode('vehicle_filter', function () {
 
     <script>
     jQuery(document).ready(function($) {
-        $('#vehicle-filter select').each(function(index) {
-            $(this).on('change', function() {
-                var nextSelect = $('#vehicle-filter select').eq(index + 1);
-                if ($(this).val() !== '') {
-                    nextSelect.prop('disabled', false);
-                } else {
-                    $('#vehicle-filter select').slice(index + 1).prop('disabled', true).val('');
+        // ajax URL
+        var ajaxUrl = '<?php echo admin_url("admin-ajax.php"); ?>';
+
+        // Utility: populate a select with returned terms
+        function populateSelect($select, terms) {
+            $select.empty().append('<option value="">'+ $select.attr('name').charAt(0).toUpperCase() + $select.attr('name').slice(1) +'</option>');
+            if (!terms || !terms.length) return;
+            terms.forEach(function(t){
+                $select.append('<option value="'+ t.slug +'">'+ t.name +'</option>');
+            });
+        }
+
+        // When any select changes
+        $('#vehicle-filter select').on('change', function() {
+            var $this = $(this);
+            var index = $('#vehicle-filter select').index(this);
+
+            // Reset following selects
+            $('#vehicle-filter select').slice(index + 1).prop('disabled', true).val('').find('option:not(:first)').remove();
+
+            // Collect filters up to this select
+            var filters = {};
+            $('#vehicle-filter select').each(function(i){
+                if (i <= index) {
+                    var name = $(this).attr('name');
+                    var val = $(this).val();
+                    if (val) filters[name] = val;
+                }
+            });
+
+            // Prepare next select
+            var $next = $('#vehicle-filter select').eq(index + 1);
+            if ($next.length === 0) return;
+
+            var nextTax = 'pa_' + $next.attr('name');
+
+            // AJAX request to get valid terms for the next select
+            $.post(ajaxUrl, {
+                action: 'get_vehicle_terms',
+                taxonomy: nextTax,
+                filters: filters
+            }, function(response) {
+                if (response && response.success) {
+                    populateSelect($next, response.data);
+                    // enable only if there are options
+                    if (response.data && response.data.length) {
+                        $next.prop('disabled', false);
+                    }
                 }
             });
         });
+
+        // Optional: if page loaded with query params, pre-fill selects and trigger change to load dependents
+        (function prefillFromQuery(){
+            var urlParams = new URLSearchParams(window.location.search);
+            var changed = false;
+            $('#vehicle-filter select').each(function(i){
+                var name = $(this).attr('name');
+                if (urlParams.has(name) && urlParams.get(name)) {
+                    $(this).val(urlParams.get(name));
+                    changed = true;
+                }
+            });
+            if (changed) {
+                // trigger change on first populated select to kick off cascading loads
+                $('#vehicle-filter select').filter(function(){ return $(this).val() !== ''; }).last().trigger('change');
+            }
+        })();
     });
     </script>
     <?php
@@ -329,6 +387,67 @@ add_action('pre_get_posts', function($query) {
     }
 });
 
+
+
+
+
+// AJAX handlers (public + logged in)
+add_action('wp_ajax_get_vehicle_terms', 'get_vehicle_terms');
+add_action('wp_ajax_nopriv_get_vehicle_terms', 'get_vehicle_terms');
+
+function get_vehicle_terms() {
+    // Security & input
+    $taxonomy = isset($_POST['taxonomy']) ? sanitize_text_field($_POST['taxonomy']) : '';
+    $filters  = isset($_POST['filters']) && is_array($_POST['filters']) ? array_map('sanitize_text_field', $_POST['filters']) : [];
+
+    if (empty($taxonomy)) {
+        wp_send_json_error('Missing taxonomy');
+    }
+
+    // Build tax_query from selected filters (only include non-empty)
+    $tax_query = ['relation' => 'AND'];
+    foreach ($filters as $key => $value) {
+        if (! $value ) continue;
+        $tax_query[] = [
+            'taxonomy' => 'pa_' . sanitize_key($key),
+            'field'    => 'slug',
+            'terms'    => $value,
+        ];
+    }
+
+    // Query product IDs that match selected filters
+    $q = new WP_Query([
+        'post_type'      => 'product',
+        'posts_per_page' => -1,
+        'fields'         => 'ids',
+        'tax_query'      => $tax_query,
+    ]);
+
+    $product_ids = $q->posts ?: [];
+
+    if (empty($product_ids)) {
+        wp_send_json_success([]); // no products -> no terms
+    }
+
+    // Get terms used by those products for requested taxonomy
+    $requested_tax = sanitize_text_field($taxonomy); // expected like 'pa_model'
+    $terms = wp_get_object_terms($product_ids, $requested_tax, ['fields' => 'all']);
+
+    if (is_wp_error($terms) || empty($terms)) {
+        wp_send_json_success([]);
+    }
+
+    // Make unique and prepare response (slug + name)
+    $map = [];
+    foreach ($terms as $t) {
+        if (!isset($map[$t->term_id])) {
+            $map[$t->term_id] = ['slug' => $t->slug, 'name' => $t->name];
+        }
+    }
+
+    $result = array_values($map);
+    wp_send_json_success($result);
+}
 
 
 
