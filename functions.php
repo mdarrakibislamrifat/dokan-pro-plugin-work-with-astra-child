@@ -247,7 +247,7 @@ add_shortcode('vehicle_filter', function () {
     </style>
 
     <div class="vehicle-filter-container">
-        <h2>Select Your Truck</h2>
+        <h2>Equipment for Sale</h2>
         <?php
         $shop_id  = wc_get_page_id('shop');
         $shop_url = $shop_id ? get_permalink($shop_id) : site_url('/shop/');
@@ -266,17 +266,26 @@ foreach ($attributes as $i => $attr_slug) {
     $terms = get_terms(['taxonomy' => $taxonomy, 'hide_empty' => false]);
     ?>
     <div class="filter-group">
-        <select name="<?php echo esc_attr($attr_slug); ?>" <?php echo $i === 0 ? '' : 'disabled'; ?> required>
-            <option value=""><?php echo esc_html($label); ?></option>
-            <?php
-            if (!is_wp_error($terms) && $terms) {
-                foreach ($terms as $term) {
-                    echo "<option value='" . esc_attr($term->slug) . "'>" . esc_html($term->name) . "</option>";
-                }
+    <select name="<?php echo esc_attr($attr_slug); ?>" <?php echo $i === 0 ? '' : 'disabled'; ?> required>
+        <?php
+        // Change first option label for Truck Category only
+        if ($attr_slug === 'truck-category') {
+            echo '<option value="">Category</option>';
+        } else {
+            echo '<option value="">' . esc_html($label) . '</option>';
+        }
+        ?>
+
+        <?php
+        if (!is_wp_error($terms) && $terms) {
+            foreach ($terms as $term) {
+                echo "<option value='" . esc_attr($term->slug) . "'>" . esc_html($term->name) . "</option>";
             }
-            ?>
-        </select>
-    </div>
+        }
+        ?>
+    </select>
+</div>
+
     <?php
 }
 
