@@ -256,27 +256,31 @@ add_shortcode('vehicle_filter', function () {
             <div class="filter-grid">
                 <?php
                 // Attribute slugs as per your screenshot
-                $attributes = ['make', 'model', 'years', 'engine', 'transmission', 'trim'];
+               $attributes = ['truck-category', 'make', 'model', 'years'];
 
-                foreach ($attributes as $i => $attr_slug) {
-                    $taxonomy = 'pa_' . $attr_slug;
-                    $label = ucfirst($attr_slug);
-                    $terms = get_terms(['taxonomy' => $taxonomy, 'hide_empty' => false]);
-                    ?>
-                    <div class="filter-group">
-                        <select name="<?php echo esc_attr($attr_slug); ?>" <?php echo $i === 0 ? '' : 'disabled'; ?> required>
-                            <option value=""><?php echo esc_html($label); ?></option>
-                            <?php
-                            if (!is_wp_error($terms) && $terms) {
-                                foreach ($terms as $term) {
-                                    echo "<option value='" . esc_attr($term->slug) . "'>" . esc_html($term->name) . "</option>";
-                                }
-                            }
-                            ?>
-                        </select>
-                    </div>
-                    <?php
+
+foreach ($attributes as $i => $attr_slug) {
+    $taxonomy = 'pa_' . $attr_slug; // WooCommerce attribute prefix
+    $label = ucwords(str_replace('-', ' ', $attr_slug)); // Friendly label
+
+    $terms = get_terms(['taxonomy' => $taxonomy, 'hide_empty' => false]);
+    ?>
+    <div class="filter-group">
+        <select name="<?php echo esc_attr($attr_slug); ?>" <?php echo $i === 0 ? '' : 'disabled'; ?> required>
+            <option value=""><?php echo esc_html($label); ?></option>
+            <?php
+            if (!is_wp_error($terms) && $terms) {
+                foreach ($terms as $term) {
+                    echo "<option value='" . esc_attr($term->slug) . "'>" . esc_html($term->name) . "</option>";
                 }
+            }
+            ?>
+        </select>
+    </div>
+    <?php
+}
+
+
                 ?>
             </div>
 
@@ -369,7 +373,7 @@ add_action('pre_get_posts', function($query) {
     if (!is_admin() && $query->is_main_query() && is_shop()) {
         $tax_query = ['relation' => 'AND'];
 
-        $attributes = ['make', 'model', 'years', 'engine', 'transmission', 'trim'];
+        $attributes = ['truck-category', 'make', 'model', 'years'];
 
         foreach ($attributes as $attr) {
             if (!empty($_GET[$attr])) {
@@ -386,6 +390,9 @@ add_action('pre_get_posts', function($query) {
         }
     }
 });
+
+
+
 
 
 
@@ -430,7 +437,8 @@ function get_vehicle_terms() {
     }
 
     // Get terms used by those products for requested taxonomy
-    $requested_tax = sanitize_text_field($taxonomy); // expected like 'pa_model'
+    $requested_tax = sanitize_text_field($taxonomy); // this will be like 'pa_categories', 'pa_make', etc.
+
     $terms = wp_get_object_terms($product_ids, $requested_tax, ['fields' => 'all']);
 
     if (is_wp_error($terms) || empty($terms)) {
