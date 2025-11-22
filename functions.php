@@ -36,6 +36,18 @@ function rifat_custom_single_product() {
 add_action( 'wp_enqueue_scripts', 'rifat_custom_single_product' );
 
 
+
+
+
+
+function mi_modern_shop_styles() {
+    if (is_shop() || is_product_category() || is_product_tag()) {
+        wp_enqueue_style('mi-shop', get_stylesheet_directory_uri() . '/assets/css/mi-shop.css',array(), '1.0.0', 'all');
+    }
+}
+add_action('wp_enqueue_scripts', 'mi_modern_shop_styles');
+
+
 // enque js file
 // Enque single page product custom css
 function rifat_custom_single_product_js() {
@@ -157,50 +169,90 @@ add_filter('woocommerce_get_shop_page_permalink', function($permalink) {
 
 
 
-// Mail function for contact seller form
 add_action('wp_ajax_send_vendor_email', 'rifat_send_vendor_email');
 add_action('wp_ajax_nopriv_send_vendor_email', 'rifat_send_vendor_email');
 
 function rifat_send_vendor_email() {
+
     if (!isset($_POST['product_id'])) {
         wp_send_json(['success'=>false, 'message'=>'Product ID missing.']);
     }
 
     $product_id = intval($_POST['product_id']);
     $product = wc_get_product($product_id);
-    if (!$product) wp_send_json(['success'=>false, 'message'=>'Invalid product.']);
 
-    // Vendor info
+    if (!$product) {
+        wp_send_json(['success'=>false, 'message'=>'Invalid product.']);
+    }
+
+    // Dokan Vendor Email
     $vendor_id = get_post_field('post_author', $product_id);
-    $vendor = get_userdata($vendor_id);
-    if (!$vendor) wp_send_json(['success'=>false, 'message'=>'Vendor not found.']);
-    $vendor_email = $vendor->user_email;
+    $store_info = dokan_get_store_info($vendor_id);
+    $vendor_email = sanitize_email($store_info['email'] ?? '');
 
-    // Current user (sender)
-    $current_user = wp_get_current_user();
-    if (!$current_user->exists()) wp_send_json(['success'=>false, 'message'=>'You must be logged in.']);
+    if (empty($vendor_email)) {
+        wp_send_json(['success'=>false, 'message'=>'Vendor email not found.']);
+    }
+
+    // Customer fields
+    $sender_name  = sanitize_text_field($_POST['first_name'].' '.$_POST['last_name']);
     $sender_email = sanitize_email($_POST['email']);
-    $sender_name = sanitize_text_field($_POST['first_name'] . ' ' . $_POST['last_name']);
+    $phone        = sanitize_text_field($_POST['phone']);
+    $postal_code  = sanitize_text_field($_POST['postal_code']);
+    $message_user = sanitize_textarea_field($_POST['message']);
 
-    // Message
-    $phone = sanitize_text_field($_POST['phone']);
-    $postal_code = sanitize_text_field($_POST['postal_code']);
-    $message = sanitize_textarea_field($_POST['message']);
+    // PRODUCT FIELDS (submitted by user)
+    $class     = sanitize_text_field($_POST['class_field']);
+$category  = sanitize_text_field($_POST['category_field']);
+$make      = sanitize_text_field($_POST['make_field']);
+$model     = sanitize_text_field($_POST['model_field']);
+$price     = sanitize_text_field($_POST['price_field']);
+$year      = sanitize_text_field($_POST['year_field']);
+$condition = sanitize_text_field($_POST['condition_field']);
+$hours     = sanitize_text_field($_POST['hours_field']);
 
-    $subject = "New Inquiry about: " . $product->get_name();
-    $body = "You have a new inquiry from $sender_name ($sender_email)\n\n";
-    $body .= "Phone: $phone\nPostal Code: $postal_code\n\nMessage:\n$message";
 
-    $headers = ["From: $sender_name <$sender_email>"];
+    // Email subject
+    $subject = "New Inquiry About: " . $product->get_name();
 
-    $mail_sent = wp_mail($vendor_email, $subject, $body, $headers);
+    // Email body (with user-submitted data)
+    $body  = "A customer is interested in your product.\n\n";
 
-    if($mail_sent){
+    $body .= "PRODUCT INFORMATION (Entered by customer):\n";
+    $body .= "Class: $class\n";
+    $body .= "Category: $category\n";
+    $body .= "Make: $make\n";
+    $body .= "Model: $model\n";
+    $body .= "Price: $price\n";
+    $body .= "Year: $year\n";
+    $body .= "Condition: $condition\n";
+    $body .= "Hours: $hours\n\n";
+
+    $body .= "CUSTOMER DETAILS:\n";
+    $body .= "Name: $sender_name\n";
+    $body .= "Email: $sender_email\n";
+    $body .= "Phone: $phone\n";
+    $body .= "Postal Code: $postal_code\n\n";
+
+    $body .= "Message:\n$message_user\n\n";
+
+    // Headers
+    $headers = [
+        'From: '.get_bloginfo('name').' <no-reply@'.$_SERVER['SERVER_NAME'].'>',
+        'Reply-To: '.$sender_name.' <'.$sender_email.'>',
+    ];
+
+    // Send Email
+    $sent = wp_mail($vendor_email, $subject, $body, $headers);
+
+    if ($sent) {
         wp_send_json(['success'=>true, 'message'=>'Message sent successfully!']);
     } else {
-        wp_send_json(['success'=>false, 'message'=>'Failed to send message.']);
+        wp_send_json(['success'=>false,'message'=>'Failed to send message.']);
     }
 }
+
+
 
 
 
@@ -256,7 +308,7 @@ add_shortcode('vehicle_filter', function () {
             <div class="filter-grid">
                 <?php
                 // Attribute slugs as per your screenshot
-               $attributes = ['truck-category', 'make', 'model', 'years'];
+               $attributes = ['class', 'truck-category', 'make', 'model', 'years','price'];
 
 
 foreach ($attributes as $i => $attr_slug) {

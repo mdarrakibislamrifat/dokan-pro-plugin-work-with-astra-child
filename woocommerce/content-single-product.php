@@ -108,42 +108,89 @@ $location = get_post_meta( $product->get_id(), '_product_location', true );
         ?>
 
                         <form id="rifat-email-form" method="post" class="rifat-email-form">
-                            <label>
-                                <span>First Name</span>
-                                <input type="text" name="first_name" class="input" placeholder="Enter your first name"
-                                    value="<?php echo esc_attr($first_name); ?>" required>
-                            </label>
-                            <label>
-                                <span>Last Name</span>
-                                <input type="text" name="last_name" class="input" placeholder="Enter your last name"
-                                    value="<?php echo esc_attr($last_name); ?>" required>
-                            </label>
-                            <label>
-                                <span>Your Email</span>
-                                <input type="email" name="email" class="input" placeholder="Enter your email"
-                                    value="<?php echo esc_attr($user_email); ?>" required>
-                            </label>
-                            <label>
-                                <span>Your Phone</span>
-                                <input type="tel" name="phone" class="input" placeholder="Enter your phone number"
-                                    required>
-                            </label>
-                            <label>
-                                <span>Postal Code</span>
-                                <input type="text" name="postal_code" class="input" placeholder="Enter your postal code"
-                                    required>
-                            </label>
-                            <label>
-                                <span>Your Message</span>
-                                <textarea name="message" class="textarea" placeholder="Write your message..."
-                                    required></textarea>
-                            </label>
 
-                            <div class="modal-action">
-                                <button type="submit" class="btn">Send Message</button>
-                                <button class="btn" type="button" id="closeModalBtn">Close</button>
-                            </div>
-                        </form>
+    <label>
+        <span>First Name</span>
+        <input type="text" name="first_name" class="input" required>
+    </label>
+
+    <label>
+        <span>Last Name</span>
+        <input type="text" name="last_name" class="input" required>
+    </label>
+
+    <label>
+        <span>Your Email</span>
+        <input type="email" name="email" class="input" required>
+    </label>
+
+    <label>
+        <span>Your Phone</span>
+        <input type="tel" name="phone" class="input" required>
+    </label>
+
+    <label>
+        <span>Postal Code</span>
+        <input type="text" name="postal_code" class="input" required>
+    </label>
+
+    <!-- ADD EXTRA FIELDS HERE -->
+    <label>
+        <span>Class</span>
+        <input type="text" name="class_field" class="input">
+    </label>
+
+    <label>
+        <span>Category</span>
+        <input type="text" name="category_field" class="input">
+    </label>
+
+    <label>
+        <span>Make</span>
+        <input type="text" name="make_field" class="input">
+    </label>
+
+    <label>
+        <span>Model</span>
+        <input type="text" name="model_field" class="input">
+    </label>
+
+    <label>
+        <span>Price</span>
+        <input type="text" name="price_field" class="input">
+    </label>
+
+    <label>
+        <span>Year</span>
+        <input type="text" name="year_field" class="input">
+    </label>
+
+    <label>
+        <span>Condition</span>
+        <select name="condition_field" class="input">
+            <option value="New">New</option>
+            <option value="Used">Used</option>
+        </select>
+    </label>
+
+    <label>
+        <span>Hours</span>
+        <input type="text" name="hours_field" class="input">
+    </label>
+
+    <!-- LAST FIELD -->
+    <label>
+        <span>Your Message</span>
+        <textarea name="message" class="textarea" required></textarea>
+    </label>
+
+    <div class="modal-action">
+        <button type="submit" class="btn">Send Message</button>
+        <button class="btn" type="button" id="closeModalBtn">Close</button>
+    </div>
+
+</form>
+
                     </div>
                 </dialog>
 
